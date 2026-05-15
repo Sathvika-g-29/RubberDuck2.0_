@@ -22,12 +22,17 @@ export const HealthCheckResponse = zod.object({
 
  * @summary Stream a chat response (SSE)
  */
+export const streamChatBodyExchangeCountMin = 0;
+
+
+
 export const StreamChatBody = zod.object({
   "messages": zod.array(zod.object({
   "role": zod.enum(['user', 'assistant']),
   "content": zod.string()
 })),
-  "mode": zod.enum(['socratic', 'debrief'])
+  "mode": zod.enum(['socratic', 'nudge', 'debrief', 'giveup']),
+  "exchangeCount": zod.number().min(streamChatBodyExchangeCountMin).describe('Number of completed assistant exchanges so far')
 })
 
 

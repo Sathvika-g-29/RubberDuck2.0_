@@ -27,12 +27,19 @@ export type ChatInputMode = typeof ChatInputMode[keyof typeof ChatInputMode];
 
 export const ChatInputMode = {
   socratic: 'socratic',
+  nudge: 'nudge',
   debrief: 'debrief',
+  giveup: 'giveup',
 } as const;
 
 export interface ChatInput {
   messages: ChatMessage[];
   mode: ChatInputMode;
+  /**
+     * Number of completed assistant exchanges so far
+     * @minimum 0
+     */
+  exchangeCount: number;
 }
 
 export interface ErrorResponse {

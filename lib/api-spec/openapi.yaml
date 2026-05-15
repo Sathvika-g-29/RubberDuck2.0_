@@ -74,7 +74,7 @@ components:
           type: string
     ChatInput:
       type: object
-      required: [messages, mode]
+      required: [messages, mode, exchangeCount]
       properties:
         messages:
           type: array
@@ -82,7 +82,11 @@ components:
             $ref: "#/components/schemas/ChatMessage"
         mode:
           type: string
-          enum: [socratic, debrief]
+          enum: [socratic, nudge, debrief, giveup]
+        exchangeCount:
+          type: integer
+          minimum: 0
+          description: Number of completed assistant exchanges so far
     ErrorResponse:
       type: object
       required: [error]

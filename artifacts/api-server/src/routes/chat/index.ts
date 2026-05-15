@@ -1,9 +1,30 @@
 import { Router, type IRouter } from "express";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { StreamChatBody } from "@workspace/api-zod";
-import { SOCRATIC_SYSTEM_PROMPT, DEBRIEF_SYSTEM_PROMPT } from "../../lib/prompts";
+import {
+  SOCRATIC_SYSTEM_PROMPT,
+  NUDGE_SYSTEM_PROMPT,
+  DEBRIEF_SYSTEM_PROMPT,
+  GIVE_UP_SYSTEM_PROMPT,
+} from "../../lib/prompts";
 
 const router: IRouter = Router();
+
+function selectSystemPrompt(
+  mode: "socratic" | "nudge" | "debrief" | "giveup",
+): string {
+  switch (mode) {
+    case "nudge":
+      return NUDGE_SYSTEM_PROMPT;
+    case "debrief":
+      return DEBRIEF_SYSTEM_PROMPT;
+    case "giveup":
+      return GIVE_UP_SYSTEM_PROMPT;
+    case "socratic":
+    default:
+      return SOCRATIC_SYSTEM_PROMPT;
+  }
+}
 
 router.post("/chat/stream", async (req, res): Promise<void> => {
   const parsed = StreamChatBody.safeParse(req.body);
@@ -13,9 +34,7 @@ router.post("/chat/stream", async (req, res): Promise<void> => {
   }
 
   const { messages, mode } = parsed.data;
-
-  const systemPrompt =
-    mode === "debrief" ? DEBRIEF_SYSTEM_PROMPT : SOCRATIC_SYSTEM_PROMPT;
+  const systemPrompt = selectSystemPrompt(mode);
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");

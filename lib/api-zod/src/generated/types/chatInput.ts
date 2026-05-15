@@ -11,4 +11,9 @@ import type { ChatMessage } from './chatMessage';
 export interface ChatInput {
   messages: ChatMessage[];
   mode: ChatInputMode;
+  /**
+     * Number of completed assistant exchanges so far
+     * @minimum 0
+     */
+  exchangeCount: number;
 }

@@ -11,5 +11,7 @@ export type ChatInputMode = typeof ChatInputMode[keyof typeof ChatInputMode];
 
 export const ChatInputMode = {
   socratic: 'socratic',
+  nudge: 'nudge',
   debrief: 'debrief',
+  giveup: 'giveup',
 } as const;
