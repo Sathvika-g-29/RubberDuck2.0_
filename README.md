@@ -12,7 +12,6 @@ Instead of telling you what's wrong, the rubber duck asks precise, Socratic ques
 - **AI:** Anthropic Claude (via streaming SSE)
 - **State:** Client-side only — no database, no accounts. When the tab closes, it's gone. That's a feature.
 ## Project Structure
-
 artifacts/
 rubber-duck/ ← React + Vite frontend
 api-server/ ← Express API server (SSE streaming)
