@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Rubber Duck 2.0</title>
+  <style>
+    :root{--ink:#111827;--muted:#6b7280;--line:#f1eab4;--paper:#fffef6;--yellow:#fde047;--soft-yellow:#fff9d7;--navy:#0f172a;--duck-green:#10b981;--duck-brown:#8b5e4f;--duck-orange:#f97316}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 18% 18%,rgba(255,231,117,.28),transparent 18rem),radial-gradient(circle at 82% 16%,rgba(255,245,180,.5),transparent 20rem),linear-gradient(180deg,#fffdf0 0%,#fffbe8 46%,#fff 100%)}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.9) 0 2px,transparent 3px),radial-gradient(circle,rgba(250,204,21,.16) 0 7px,transparent 8px);background-size:96px 96px,180px 180px;background-position:12px 18px,70px 80px;opacity:.7}
+    button,textarea{font:inherit}
+    button{cursor:pointer}
+    .topbar{position:sticky;top:0;z-index:3;border-bottom:1px solid rgba(241,234,180,.8);background:rgba(255,255,255,.72);backdrop-filter:blur(14px)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;width:min(100%,46rem);margin:0 auto;padding:.75rem 1rem}
+    .brand{display:flex;align-items:center;gap:.75rem}
+    .duck-badge{display:inline-grid;place-items:center;width:2.75rem;height:2.75rem;border-radius:999px;background:var(--yellow);box-shadow:0 4px 14px rgba(234,179,8,.35)}
+    .duck-badge.large{width:7.5rem;height:7.5rem;margin:0 auto;box-shadow:0 10px 26px rgba(234,179,8,.35)}
+    .duck-badge svg{width:76%;height:76%}
+    .duck-head{fill:var(--duck-green)}.duck-body{fill:var(--duck-brown)}.duck-wing{fill:#a77a68}.duck-beak,.duck-feet{fill:var(--duck-orange)}.duck-eye{fill:#0f172a}
+    h1,h2,p{margin:0}
+    .brand h1{font-size:1rem;line-height:1}
+    .brand p{margin-top:.2rem;color:var(--muted);font-size:.78rem}
+    .nav-actions{display:flex;align-items:center;gap:.75rem}
+    .state-pill{border-radius:999px;background:#f8fafc;padding:.25rem .6rem;color:#475569;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.72rem}
+    .mode-tag{border:1px solid #afa9ec;border-radius:999px;background:#eeedfe;color:#3c3489;padding:.18rem .55rem;font-size:.7rem;font-weight:700;white-space:nowrap}
+    .mode-tag.nudge{border-color:#ef9f27;background:#faeeda;color:#633806}
+    .mode-tag.debrief{border-color:#97c459;background:#eaf3de;color:#27500a}
+    .mode-tag.reveal{border-color:#f0997b;background:#faece7;color:#712b13}
+    .exchange-bar{display:none;align-items:center;gap:.45rem;color:var(--muted);font-size:.72rem}
+    .exchange-bar.active{display:flex}
+    .exchange-bar div{display:flex;gap:.18rem}
+    .exchange-bar i{display:block;width:.9rem;height:.25rem;border-radius:999px;background:#e5e7eb}
+    .exchange-bar i.filled{background:#4f46e5}
+    .exchange-bar i.warm{background:#ef9f27}
+    .reset{display:inline-flex;align-items:center;gap:.35rem;border:0;background:transparent;color:#111827;font-size:.86rem}
+    .page{position:relative;z-index:1;width:min(100%,46rem);margin:0 auto;padding:4.25rem 1rem 14rem}
+    .hero{text-align:center}
+    .hero h2{margin-top:1.75rem;font-size:clamp(2rem,4vw,3rem);line-height:1.05}
+    .hero-copy{max-width:36rem;margin:1rem auto 0;color:#4b5563;font-size:1rem;line-height:1.65}
+    code{border-radius:6px;background:#fef3c7;padding:.16rem .42rem;color:#374151;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+    .start-button{display:inline-flex;align-items:center;gap:.55rem;min-height:3rem;margin-top:2.2rem;border:0;border-radius:8px;background:var(--navy);color:#fff;padding:0 1.35rem;font-weight:650;box-shadow:0 8px 20px rgba(15,23,42,.18)}
+    .hint-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin-top:3rem;text-align:left}
+    .hint{min-height:9rem;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.72);padding:1.1rem}
+    .hint-icon{font-size:1.6rem}
+    .hint strong{display:block;margin-top:.7rem}
+    .hint p{margin-top:.45rem;color:#4b5563;font-size:.9rem;line-height:1.4}
+    .chat-panel{display:none;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.68);padding:1rem;min-height:26rem;max-height:60vh;overflow-y:auto;backdrop-filter:blur(10px)}
+    .chat-panel.active{display:block}
+    .message{display:flex;align-items:flex-start;gap:.65rem;margin-bottom:.9rem}
+    .message.user{justify-content:flex-end}
+    .avatar{flex:0 0 auto;display:grid;place-items:center;width:2.1rem;height:2.1rem;border-radius:999px;background:var(--yellow);box-shadow:0 3px 10px rgba(234,179,8,.22)}
+    .avatar svg{width:1.7rem;height:1.7rem}
+    .bubble{max-width:min(82%,36rem);border:1px solid #fde68a;border-radius:18px;border-bottom-left-radius:4px;background:#fffbeb;padding:.82rem 1rem;line-height:1.55;white-space:pre-wrap}
+    .user .bubble{order:1;border-color:var(--navy);border-bottom-left-radius:18px;border-bottom-right-radius:4px;background:var(--navy);color:#fff}
+    .debrief-block{border:2px solid #86efac;border-radius:14px;background:rgba(236,253,245,.9);padding:1.2rem 1.3rem;color:#064e3b;white-space:pre-wrap;line-height:1.6;margin-bottom:.9rem}
+    .debrief-label{display:inline-block;margin-bottom:.6rem;font-size:.72rem;font-weight:700;background:#bbf7d0;color:#064e3b;border-radius:999px;padding:.15rem .55rem}
+    .cursor{display:inline-block;width:2px;height:1em;background:#8b5e4f;border-radius:1px;vertical-align:middle;margin-left:1px;animation:blink .7s steps(1) infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    .composer-wrap{position:fixed;left:0;right:0;bottom:0;z-index:4;border-top:1px solid rgba(241,234,180,.9);background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.98) 34%)}
+    .composer{display:grid;grid-template-columns:1fr 3rem;align-items:end;gap:.65rem;width:min(100%,46rem);margin:0 auto;padding:.9rem 1rem 1.25rem}
+    .hint-alert{display:none;width:min(calc(100% - 2rem),44rem);margin:.75rem auto -.35rem;border-radius:8px;padding:.45rem .7rem;font-size:.8rem}
+    .hint-alert.active{display:block}
+    .hint-alert.warm{border:1px solid #ef9f27;background:#faeeda;color:#633806}
+    .hint-alert.reveal-alert{border:1px solid #f0997b;background:#faece7;color:#712b13}
+    textarea{width:100%;min-height:6.2rem;resize:none;border:1px solid #e8dc7d;border-radius:8px;background:#fff;color:var(--ink);padding:.95rem;line-height:1.45;outline:none}
+    textarea:focus{border-color:#eab308;box-shadow:0 0 0 .18rem rgba(234,179,8,.16)}
+    textarea:disabled{opacity:.5}
+    .send{display:grid;place-items:center;width:3rem;height:3rem;border:0;border-radius:8px;background:#6b7280;color:#fff}
+    .send.active{background:var(--navy)}
+    .tip{width:min(100%,46rem);margin:-.8rem auto 0;padding:0 1rem .75rem;color:#6b7280;font-size:.73rem}
+    @media(max-width:720px){.nav-inner{align-items:flex-start}.brand p{display:none}.page{padding-top:2.7rem}.hint-grid{grid-template-columns:1fr}.hero h2{font-size:2rem}.duck-badge.large{width:6rem;height:6rem}}
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="nav-inner">
+    <div class="brand">
+      <div class="duck-badge" aria-hidden="true"></div>
+      <div>
+        <h1>Rubber Duck 2.0</h1>
+        <p>A Socratic debugger that never gives you the answer.</p>
+      </div>
+      <span class="mode-tag" id="modeTag">Socratic mode</span>
+    </div>
+    <div class="nav-actions">
+      <div class="exchange-bar" id="exchangeBar">
+        <span>exchanges</span>
+        <div id="exchangeTicks"></div>
+        <span id="exchangeCount">0/10</span>
+      </div>
+      <span class="state-pill" id="statePill">idle</span>
+      <button class="reset" id="resetButton" type="button" aria-label="New bug">
+        <span aria-hidden="true">↻</span> New bug
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <section class="hero" id="hero">
+    <div class="duck-badge large" aria-hidden="true"></div>
+    <h2>Stuck on a bug? Talk to the duck.</h2>
+    <p class="hero-copy">
+      I won't tell you the answer. I'll ask the question that gets you closer
+      to finding it yourself. When you crack it, type <code>found it</code> and I'll
+      debrief what unblocked you.
+    </p>
+    <button class="start-button" id="startButton" type="button">
+      <span aria-hidden="true">✧</span>
+      Start describing your bug
+    </button>
+    <div class="hint-grid">
+      <article class="hint">
+        <div class="hint-icon">🔍</div>
+        <strong>Step 1</strong>
+        <p>Tell the duck what you expected vs what happened.</p>
+      </article>
+      <article class="hint">
+        <div class="hint-icon">🦆</div>
+        <strong>Step 2</strong>
+        <p>Answer its questions. They expose your assumptions.</p>
+      </article>
+      <article class="hint">
+        <div class="hint-icon">✨</div>
+        <strong>Step 3</strong>
+        <p>Type "found it" the moment it clicks. Get a sharp debrief.</p>
+      </article>
+    </div>
+  </section>
+  <section class="chat-panel" id="chatPanel" aria-live="polite"></section>
+</main>
+
+<div class="composer-wrap">
+  <div class="hint-alert warm" id="warmAlert">🔥 Getting warmer — hints are sharper now.</div>
+  <div class="hint-alert reveal-alert" id="revealAlert">🏳️ Stuck? You can say "just tell me" to get the answer.</div>
+  <form class="composer" id="form">
+    <textarea id="input" placeholder="Describe your bug. What did you expect? What actually happened? What have you tried?"></textarea>
+    <button class="send" id="sendButton" type="submit" aria-label="Send">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path d="M22 2 11 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="m22 2-7 20-4-9-9-4 20-7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </form>
+  <p class="tip" id="tip">Press Enter to send · Shift+Enter for newline</p>
+</div>
+
+<script>
+const DUCK_SVG = `<svg viewBox="0 0 80 80" aria-hidden="true">
+  <ellipse class="duck-body" cx="40" cy="47" rx="20" ry="15"/>
+  <circle class="duck-head" cx="34" cy="29" r="12"/>
+  <path class="duck-beak" d="M22 29h-9c-3 0-4 4-1 6l9 4c3 1 6-1 6-4v-1c0-3-2-5-5-5Z"/>
+  <circle class="duck-eye" cx="31" cy="25" r="2.2"/>
+  <path class="duck-wing" d="M43 41c8 2 12 8 10 15-8 1-16-3-20-10 3-4 6-6 10-5Z"/>
+  <path class="duck-feet" d="M31 62c-4 4-8 4-10 2 3-3 6-5 10-5v3Zm20 0c4 4 8 4 10 2-3-3-6-5-10-5v3Z"/>
+  <path d="M53 38c5 0 9-4 10-9" fill="none" stroke="#4f46e5" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+
+document.querySelectorAll(".duck-badge").forEach(b => b.innerHTML = DUCK_SVG);
+
+const PROMPTS = {
+  socratic: `You are Rubber Duck 2.0 — a debugging partner who NEVER gives answers.
+
+STRICT RULES:
+- Never state the answer, fix, or solution under any circumstances.
+- Never say "try X" — rephrase as a question.
+- Every response must end with exactly ONE question.
+- Keep responses to 1–3 sentences + the question. No more.
+- Do not validate guesses with "yes" or "correct" — respond with another question.
+- If they ask "am I right?", reply "What makes you think that?"
+- You may briefly acknowledge their reasoning before asking (e.g. "You've isolated the function —").
+
+Tone: calm, curious, relentless. Like a patient senior engineer who wants the junior to have the breakthrough themselves.`,
+
+  nudge: `You are Rubber Duck 2.0. The developer has been stuck for a while (8+ exchanges).
+
+You're still NOT giving the answer — but your questions can now be more pointed and leading.
+
+Rules:
+- Still only ask questions — never direct answers.
+- Questions can now reference specific things to check: "What does the value of X look like right before line Y?"
+- You can say things like "If you log Z right there, what do you think you'd see?"
+- End with exactly ONE question.
+- 2–3 sentences max.`,
+
+  debrief: `You are Rubber Duck 2.0. The developer just found their bug.
+
+Break character completely. Give a warm, direct debrief in this exact structure (use these exact headers):
+
+**The bug** — name it clearly in one sentence.
+**Why it was hard to see** — one sentence on the cognitive trap.
+**The pattern** — name the thinking pattern that finally unlocked it.
+**One takeaway** — the most useful lesson to carry forward.
+
+4 short paragraphs. Be direct and human. No more questions.`,
+
+  reveal: `You are Rubber Duck 2.0. The developer gave up after many attempts.
+
+Break character completely. Give them the answer and debrief:
+
+**The answer** — state it directly and clearly.
+**Why the Socratic approach still helped** — what narrowing-down happened.
+**The pattern to watch for** — so they catch it faster next time.
+**One concrete tip** — a debugging technique specific to this type of bug.
+
+Direct, warm, not preachy. 4 short paragraphs.`
+};
+
+const SOLVED_RE = /\b(fixed|solved|found it|got it|works now|that was it|figured it out|bingo|eureka|i found|i see it|i see the|that's it|its the|it's the)\b/i;
+const UNCERTAIN_RE = /\?|maybe|not sure|i think|could it|should i|is it\?|was it\?/i;
+const GIVE_UP_RE = /\b(give up|just tell me|what is it\?|what's the answer|can't figure|tell me the answer|just show me|what is the answer)\b/i;
+
+let messages = [];
+let exchanges = 0;
+let currentMode = "socratic";
+let streaming = false;
+
+const input = document.getElementById("input");
+const form = document.getElementById("form");
+const hero = document.getElementById("hero");
+const chatPanel = document.getElementById("chatPanel");
+const statePill = document.getElementById("statePill");
+const sendButton = document.getElementById("sendButton");
+const tip = document.getElementById("tip");
+const modeTag = document.getElementById("modeTag");
+const exchangeBar = document.getElementById("exchangeBar");
+const exchangeTicks = document.getElementById("exchangeTicks");
+const exchangeCount = document.getElementById("exchangeCount");
+const warmAlert = document.getElementById("warmAlert");
+const revealAlert = document.getElementById("revealAlert");
+
+function setStatePill(text) {
+  statePill.textContent = text;
+}
+
+function setMode(m) {
+  currentMode = m;
+  const labels = { socratic:"Socratic mode", nudge:"Warmer hints", debrief:"Bug found", reveal:"Revealed" };
+  modeTag.textContent = labels[m] || m;
+  modeTag.className = `mode-tag ${m}`;
+}
+
+function updateExchangeUI() {
+  const active = exchanges > 0;
+  exchangeBar.classList.toggle("active", active);
+  exchangeTicks.innerHTML = "";
+  for (let i = 0; i < 10; i++) {
+    const t = document.createElement("i");
+    if (i < exchanges) t.className = i >= 8 ? "warm" : "filled";
+    exchangeTicks.appendChild(t);
+  }
+  exchangeCount.textContent = `${Math.min(exchanges, 10)}/10`;
+  warmAlert.classList.toggle("active", exchanges >= 8 && exchanges < 10 && currentMode !== "debrief" && currentMode !== "reveal");
+  revealAlert.classList.toggle("active", exchanges >= 10 && currentMode !== "debrief" && currentMode !== "reveal");
+}
+
+function showChat() {
+  hero.style.display = "none";
+  chatPanel.classList.add("active");
+}
+
+function addUserBubble(text) {
+  const el = document.createElement("article");
+  el.className = "message user";
+  el.innerHTML = `<div class="bubble">${escHtml(text)}</div>`;
+  chatPanel.appendChild(el);
+  scrollChat();
+}
+
+function addDuckBubble(isDebrief) {
+  const el = document.createElement("article");
+  el.className = "message assistant";
+  if (isDebrief) {
+    el.innerHTML = `<div class="debrief-block"><span class="debrief-label">debrief</span><br><span class="content"></span><span class="cursor"></span></div>`;
+  } else {
+    el.innerHTML = `<div class="avatar">${DUCK_SVG}</div><div class="bubble"><span class="content"></span><span class="cursor"></span></div>`;
+  }
+  chatPanel.appendChild(el);
+  scrollChat();
+  return el;
+}
+
+function finaliseEl(el) {
+  const cursor = el.querySelector(".cursor");
+  if (cursor) cursor.remove();
+}
+
+function appendText(el, chunk) {
+  const content = el.querySelector(".content");
+  if (content) content.textContent += chunk;
+  scrollChat();
+}
+
+function scrollChat() {
+  chatPanel.scrollTop = chatPanel.scrollHeight;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function detectResponseMode(text) {
+  if (SOLVED_RE.test(text) && !UNCERTAIN_RE.test(text)) return "debrief";
+  if (exchanges >= 10 && GIVE_UP_RE.test(text)) return "reveal";
+  if (exchanges >= 8) return "nudge";
+  return "socratic";
+}
+
+async function streamReply(userText) {
+  streaming = true;
+  input.disabled = true;
+  sendButton.disabled = true;
+  setStatePill("thinking…");
+
+  messages.push({ role: "user", content: userText });
+
+  const responseMode = detectResponseMode(userText);
+  if (responseMode !== "debrief" && responseMode !== "reveal") exchanges++;
+  setMode(responseMode);
+  updateExchangeUI();
+
+  const isDebrief = responseMode === "debrief" || responseMode === "reveal";
+  const el = addDuckBubble(isDebrief);
+
+  try {
+    const apiUrl = location.protocol === "file:" ? "http://localhost:3001/api/chat" : "/api/chat";
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: PROMPTS[responseMode],
+        messages: messages.map(m => ({ role: m.role, content: m.content }))
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      appendText(el, "Something went wrong: " + err);
+      finaliseEl(el);
+      streaming = false;
+      input.disabled = false;
+      sendButton.disabled = false;
+      setStatePill("error");
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let full = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      full += chunk;
+      appendText(el, chunk);
+    }
+
+    finaliseEl(el);
+    messages.push({ role: "assistant", content: full });
+
+    if (isDebrief) {
+      setStatePill("solved");
+      tip.textContent = "Solved. Hit New bug to start over.";
+      input.disabled = true;
+      sendButton.disabled = true;
+    } else {
+      setStatePill("debugging");
+      tip.textContent = 'Tip: when it clicks, type "found it" for a debrief.';
+      input.disabled = false;
+      sendButton.disabled = false;
+      input.focus();
+    }
+  } catch (err) {
+    appendText(el, "Network error: " + err.message);
+    finaliseEl(el);
+    input.disabled = false;
+    sendButton.disabled = false;
+    setStatePill("error");
+  }
+
+  streaming = false;
+}
+
+function handleSend() {
+  const text = input.value.trim();
+  if (!text || streaming) return;
+  input.value = "";
+  sendButton.classList.remove("active");
+  showChat();
+  addUserBubble(text);
+  streamReply(text);
+}
+
+document.getElementById("startButton").addEventListener("click", () => {
+  setStatePill("describing");
+  input.focus();
+});
+
+document.getElementById("resetButton").addEventListener("click", () => {
+  messages = [];
+  exchanges = 0;
+  streaming = false;
+  setMode("socratic");
+  setStatePill("idle");
+  chatPanel.innerHTML = "";
+  chatPanel.classList.remove("active");
+  hero.style.display = "";
+  input.value = "";
+  input.disabled = false;
+  sendButton.disabled = false;
+  sendButton.classList.remove("active");
+  tip.textContent = "Press Enter to send · Shift+Enter for newline";
+  updateExchangeUI();
+});
+
+input.addEventListener("input", () => {
+  sendButton.classList.toggle("active", input.value.trim().length > 0);
+});
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+});
+
+form.addEventListener("submit", e => { e.preventDefault(); handleSend(); });
+
+updateExchangeUI();
+</script>
+</body>
+</html>
